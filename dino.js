@@ -1,22 +1,33 @@
+import {
+  getCustomProperty,
+  incrementCustomProperty,
+  setCustomProperty,
+} from './updateCustomProperty.js';
+
 const dinoElem = document.querySelector('[data-dino]');
 const JUMP_SPEED = 0.45;
-const GRAVITY = 0.011;
+const GRAVITY = 0.0015;
 const DINO_FRAME_COUNT = 2;
 const FRAME_TIME = 100;
 
 let isJumping;
 let dinoFrame;
 let currentFrameTime;
+let y_velocity;
 
 export function setUpDino() {
   isJumping = false;
   dinoFrame = 0;
   currentFrameTime = 0;
+  y_velocity = 0;
+  setCustomProperty(dinoElem, '--bottom', 0);
+  document.removeEventListener('keydown', onJump);
+  document.addEventListener('keydown', onJump);
 }
 
 export function updateDino(delta, speedScale) {
   handleRun(delta, speedScale);
-  handleJump();
+  handleJump(delta);
 }
 
 function handleRun(delta, speedScale) {
@@ -34,4 +45,24 @@ function handleRun(delta, speedScale) {
   currentFrameTime += delta * speedScale;
 }
 
-function handleJump() {}
+function handleJump(delta) {
+  if (!isJumping) {
+    return;
+  }
+  incrementCustomProperty(dinoElem, '--bottom', y_velocity * delta);
+
+  if (getCustomProperty(dinoElem, '--bottom') <= 0) {
+    setCustomProperty(dinoElem, '--bottom', 0);
+    isJumping = false;
+  }
+
+  y_velocity -= GRAVITY * delta;
+}
+
+function onJump(e) {
+  if (e.code !== 'Space' || isJumping) {
+    return;
+  }
+  y_velocity = JUMP_SPEED;
+  isJumping = true;
+}
